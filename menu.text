@@ -1,3 +1,208 @@
-状态	事项标题	分解自	
-项目【立项信息请点此维护、提交】
-登记日期	关闭日期	分派人
+产品方案数据治理项目优化需求文档
+版本修订记录
+版本记录	版本编号	作者	说明
+	V1.0	屈国志、武璇	新建
+			
+
+页面功能设计
+一、	售前项目模块
+1.1售前项目立项流程调整
+1、	售前项目立项界面增加【商务需求编码】字段，界面调整如下： 
+路径：项目管理→售前项目→创建售前项目
+ 
+字段说明：新增字段，维护时点击【保存】按钮，存入pms_project_pre_sales_detail表，用persale_demands_id表示，pms_project_pre_sales_detail表和pms_prj_projec表通过项目ID关联。
+2、售前项目界面增加【商务需求ID】，界面调整如下： 
+路径：项目管理→售前项目
+ 
+字段说明：取值来自上述新增字段，persale_demands_id
+3、	 售前项目立项审批通过后，将售前项目信息同步PLM优化，接口文档如下sheet“售前项目信息同步”：
+    
+1.2售前项目与方案信息同步
+1、	PLM将售前项目与方案关联关系同步PMS（PLM先将方案同步SSOT，SSOT再将数据推送PMS），接口文档如下sheet“PLM方案信息同步”：
+ 
+2、	同步后将数据存入PLM方案中间表plm_prj_programme，通过PLM_PROGRAMME_CODE匹配，如果表中已存在数据则更新数据，否则新增数据到表中。建表字段如下。
+PLM同步方案表(pms_prj_programme) 
+字段编码	字段名称	字段类型	备注
+PLM_PROGRAMME_CODE	方案编码	varchar(200)	　
+PROGRAMME_NAME	方案名称	varchar(200)	　
+PRODUCT_TYPE	产品类型(Cell，Module,Pack,)	varchar(50)	　获取同步的值，在码值表中匹配code字段等于当前字段的值，且code_type_id=‘CATL_Shipment_Type’,如果能获取到，则code_id字段的值，存入此字段，如果没获取到，则将接口传过来的原值存入此字段
+product_solutions	产品方案	varchar(100)	　获取同步的值，在码值表中匹配code字段等于当前字段的值，且code_type_id=‘CATL_Line Platform’,如果能获取到，则code_id字段的值，存入此字段，如果没获取到，则将接口传过来的原值存入此字段
+BMS	BMS版本	varchar(50)	　获取同步的值，在码值表中匹配code字段等于当前字段的值，且code_type_id=‘CATL_BMS_Terrace’,如果能获取到，则code_id字段的值，存入此字段，如果没获取到，则将接口传过来的原值存入此字段
+new_cell	是否是新电芯	varchar(100)	　
+new_shell	是否需要开壳	varchar(100)	　
+CELL_CAPACITY	电芯容量	varchar(50)	　
+CELL_TYPE	电芯类型	varchar(50)	　获取同步的值，在码值表中匹配code字段等于当前字段的值，且code_type_id=‘CATL_type_of_electric_core_shell’,如果能获取到，则code_id字段的值，存入此字段，如果没获取到，则将接口传过来的原值存入此字段
+ch_system	化学体系	varchar(100)	　获取同步的值，在码值表中匹配code字段等于当前字段的值，且code_type_id=‘CATL_cathode_materials’,如果能获取到，则code_id字段的值，存入此字段，如果没获取到，则将接口传过来的原值存入此字段
+anode_material	阳极材料	varchar(100)	　获取同步的值，在码值表中匹配code字段等于当前字段的值，且code_type_id=‘CATL_negative_materials’,如果能获取到，则code_id字段的值，存入此字段，如果没获取到，则将接口传过来的原值存入此字段
+platform	所属平台	varchar(100)	　获取同步的值，在码值表中匹配code字段等于当前字段的值，且code_type_id=‘CATL_Line Platform’,如果能获取到，则code_id字段的值，存入此字段，如果没获取到，则将接口传过来的原值存入此字段
+cell_thickness	电芯厚度/直径(mm)	varchar(100)	　
+cell_width	电芯宽度(mm)	varchar(100)	　
+cell_height	电芯肩高(mm)	varchar(100)	　
+SINGLE_MODULE_SIZE	串并数	varchar(50)	　
+electricity	产品电量	varchar(100)	　
+　	解决方案名称	　	　
+　	解决方案编码		
+pms_prj_project的presale_project_code字段	售前项目编码	varchar（100）	　
+pms_prj_project的pre_sale_project_name字段	售前项目名称	varchar（100）	　
+change_type	变更类型	varchar（10）	　
+Associated_Projects	是否关联项目	varchar（10）	　默认值为N，值集包括Y和N
+Project_code	项目编码	varchar（100）	
+
+1.3售前项目关联方案信息展示
+路径：项目管理→售前项目→项目名称
+对于售前立项完成的项目，在如下界面中，增加【产品方案】模块，通过售前项目编码，获取售前项目与方案对应关系表中获取产品方案编码，在通过产品方案编码在plm_prj_programme表中获取对应的方案信息进行展示，通过售前项目代码匹配plm_prj_programme表中的售前项代码，获取方案信息进行展示。
+ 
+点击详情后弹出如下概览界面：
+ 
+产品方案界面如图，具体需要展示的信息取值plm_prj_programme表中对应的字段，如果有值集的需要先去码值表找到对应的值进行展示，包括：
+产品类型（PMS_LIST_010） 通过PMS_LIST_010匹配sys_code_b表中的code值获取对应code_id 值，在通过code_id=sys_code_value_b. code_id and 数据库值= sys_code_value_b.value 获取对应行的meaning，获取、产品方案（PMS_LIST_075）、BMS版本（PMS_LIST_071）、是否是新电芯、是否需要开壳、电芯容量、电芯类型（PMS_LIST_011）、化学体系（PMS_PROGRAMME_CHEMICAL_SYSTEM）、阳极材料（PMS_LIST_070）、所属平台（PMS_LIST_075）、电芯厚度/直径(mm)、电芯宽度(mm)、电芯肩高(mm)、串并数、产品电量
+二、	项目立项模块
+2.1立项流程调整
+路径：项目管理→项目立项→分配
+界面如图：
+ 
+图1
+界面增加关联PLM方案按钮，PLM产品方案编码、PLM解决方案编码
+逻辑修改说明：
+1、	分配后对立项方案维护时，根据是否是客户类的oCar或eCar且不为小变更，来判断是否需要用新的关联方式，若是，则展示如图1界面，且对如图部分字段进行置灰不可编辑。界面增加PLM方案搜索框按钮；若不是，维持原有方式。
+2、	点击已有方案名称后的删除按钮对已有方案进行删除。（在方案名称对应的值后面增加删除按钮）。
+3、	点击【关联PLM方案】支持查询方案信息，弹出图2界面，不可编辑，数据来源于中间表plm_prj_programme（将PLM方案同步PMS系统，同步后数据存入方案中间表）
+ 
+
+图2
+4、	只能选择一个对应的PLM方案，默认带出售前项目编码进行初始数据查询，将获取的信息填充至图1对应的字段中，置灰的字段不可编辑，如果选择产品方案有关联的解决方案，则默认带出当前解决方案对应的所有产品方案，在方案维护界面通过增加页签显示。
+5、	关联PLM方案界面查询说明：
+ 
+查询字段	查询方式	数据来源	说明
+售前项目描述	模糊查询	plm_prj_programme	
+售前项目代码	LOV	plm_prj_programme	默认带出售前项目编码查询条件
+产品方案编码	LOV	plm_prj_programme	
+产品方案名称	模糊查询	plm_prj_programme	
+解决方案编码	LOV	plm_prj_programme	
+解决方案名称	模糊查询	plm_prj_programme	
+方案创建人	模糊查询	plm_prj_programme	
+创建人编码	LOV	取系统人员值集，查plm_prj_programme中对应的人员编码	
+创建时间	时间	plm_prj_programme	
+
+6、	关联PLM方案界面按钮说明：
+查询按钮：按照输入的查询条件进行查询
+保存：点击保存时，将数据推送前台进行展示。关闭当前PLM方案选择页签，并将选择的数据展示到方案信息维护界面对应的字段中（图一），置灰字段不可编辑。
+存入pms_prj_programme表字段如下：
+
+plm_prj_programme表字段	字段名称	存pms_prj_programme表字段	备注
+PLM_PROGRAMME_CODE	方案编码	PLM_PROGRAMME_ CODE	此字段需要在pms_prj_programme表中新增，长度类型与plm_prj_programme表保持一致
+PROGRAMME_NAME	方案名称	PROGRAMME_NAME	
+PRODUCT_TYPE	产品类型(Cell，Module,Pack,)	PRODUCT_TYPE	
+product_solutions	产品方案	product_solutions	
+BMS	BMS种类	BMS	
+new_cell	是否是新电芯	new_cell	
+new_shell	是否需要开壳	new_shell	
+CELL_CAPACITY	电芯容量	CELL_CAPACITY	
+CELL_TYPE	电芯类型	CELL_TYPE	
+ch_system	化学体系	ch_system	
+anode_material	阳极材料	anode_material	
+platform	所属平台	platform	
+cell_thickness	电芯厚度/直径(mm)	cell_thickness	
+cell_width	电芯宽度(mm)	cell_width	
+cell_height	电芯肩高(mm)	cell_height	
+SINGLE_MODULE_SIZE	串并数	SINGLE_MODULE_SIZE	
+electricity	产品电量	electricity	
+　
+solution_part_name
+	解决方案名称	Solution_name	此字段需要在pms_prj_programme表中新增长度类型与plm_prj_programme表保持一致
+　
+solution_part_number
+	解决方案编码	Solution_code	此字段需要在pms_prj_programme表中新增长度类型与plm_prj_programme表保持一致
+
+
+2.2立项结论回传
+1、	项目立项审批通过后，判断变更发起时间是否在项目上线时间之前，且是客户类的oCar或dCar且不为小变更，如果不是则执行当前逻辑，如果都满足，则额外增加调用‘PMS立项OR变更结论回传SSOT’接口，将项目与方案关系回传给PLM，接口字段如下：
+PMS字段说明
+字段编码	字段名称	长度	备注
+project_code	项目代码	varchar（100）	取值pms_prj_project表
+project_name	项目名称	varchar（100）	　取值pms_prj_project表
+project_phase	项目阶段	varchar（100）	　取值pms_prj_project表
+plm_programme_code	方案编码	varchar（200）	　通过pms_prj_project表的project_id关联pms_prj_programme表的project_id获取PLM_PROGRAMME_CODE
+persale_demands_id	项目需求编码（商务需求ID）	varchar（100）	　取值pms_project_pre_sales_detail表
+oper_idf	操作标识	varchar（100）	默认是新增，接口传默认值‘01’　如果立项通过是触发接口，判断plm_programme_code字段在方案表中是否存在关联别的项目的情况，如果存在则当前字段值为‘复用’，否则为新增。如果是变更通过后调用此接口，则值为‘变更’
+delete_idf	删除标识	varchar（100）	默认为N
+creation_date	创建日期	datetime	　
+last_update_date	更改日期	datetime	　
+
+2、PMS做项目主计划与方案解绑时，调用‘PMS立项OR变更结论回传SSOT’接口，将项目与方案关系回传给PLM，字段取值同上步立项审批操作，oper_idf传输的值默认‘03‘，
+2.3 PMS方案信息展示界面调整
+1、	 将立项中获取的方案在“产品方案”模块进行展示。
+路径：项目管理→公司项目→产品方案
+ 
+界面如图：增加展示主计划方案选择框，默认是，界面展示方案数据时先判断方案书否关联主计划，已关联的方案进行展示，否则不做展示，如果选择否时，则不做筛选，按照当前逻辑获取方案进行展示。
+
+
+三、	项目执行中的变更-PMS
+3.1方案变更流程调整
+路径：公司项目→项目变更→项目方案变更
+逻辑调整界面如图：
+ 
+1、	项目变更逻辑调整：如图，点击项目变更》项目方案变更时在当前的逻辑的基础上增加判断当前项目是否是平台类或客户类的oCar或eCar且不是小表更项目，如果不是，则走当前方案变更流程；如果是，则弹出选择窗口，选择变更类型，方案新增OR方案变更，如果是‘方案变更’，则走当前变更流程，如果是‘方案新增’则弹出PLM方案选择窗口。
+2、	方案选择界面如图，点击‘方案新增’后，弹出图2界面，不可编辑，数据来源于中间表plm_prj_programme（将PLM方案同步PMS系统，同步后数据存入方案中间表）
+ 
+图2
+3、	关联PLM方案界面查询说明：
+
+查询字段	查询方式	数据来源	说明
+售前项目描述	模糊查询	plm_prj_programme	
+售前项目代码	LOV	plm_prj_programme	默认带出售前项目编码查询条件
+产品方案编码	LOV	plm_prj_programme	
+产品方案名称	模糊查询	plm_prj_programme	
+解决方案编码	LOV	plm_prj_programme	
+解决方案名称	模糊查询	plm_prj_programme	
+方案创建人	模糊查询	plm_prj_programme	
+创建人编码	LOV	取系统人员值集，查plm_prj_programme中对应的人员编码	
+创建时间	时间	plm_prj_programme	
+
+4、	关联PLM方案界面按钮说明：
+查询按钮：对于按照输入的查询条件进行查询（默认带出售前项目编码查询条件）
+保存：点击保存时，1）记录变更时项目和方案关系到plm_prj_programme表。
+2）PMS系统提交变更逻辑调整：步骤1）中，点击流程碑变更按钮时，
+当前变更流程提交接口中增加变更子类、方案名称、产品类型、电芯容量、电芯类型、BMS种类字段。并将获取的值同步给BPM。 
+        新增字段定义如下：
+     
+PMS字段说明
+字段编码	字段名称	长度	备注
+project_code	变更子类	varchar（100）	
+project_name	方案名称	varchar（100）	
+project_phase	产品类型	varchar（100）	
+plm_programme_code	电芯容量	varchar（200）	
+persale_demands_id	电芯类型	varchar（100）	
+oper_idf	BMS种类	varchar（100）	
+			
+			
+			
+
+ 
+2、流程调整审批完成后，，更新PMS方案信息并展示。
+路径：项目管理→公司项目→项目名称→产品方案
+ 
+3.2、变更结论回传调整： 
+1、数据存入方案表：PMS收到变更类型为‘新增方案’方案变更审批通过后，判断当前项目是否是客户类的oCar或eCar，且不为小变更，如果不是，则走当前逻辑，如果是，判断变更发起时间是否在项目上线时间之前，如果否，则走当前流程，如果是，则通过项目编码匹配plm_prj_programme表中的项目编码获取方案信息存入pms_prj_programme表中对应的新增行数据中。
+2、	如果是新的变更流程，变更审批通过后，调用‘PMS立项OR变更结论回传SSOT’接口，将项目与方案关系回传给PLM，接口字段如下：
+PMS字段说明
+字段编码	字段名称	长度	备注
+project_code	项目代码	varchar（100）	取值pms_prj_project表
+project_name	项目名称	varchar（100）	　取值pms_prj_project表
+project_phase	项目阶段	varchar（100）	　取值pms_prj_project表
+plm_programme_code	方案编码	varchar（200）	　通过pms_prj_project表的project_id关联pms_prj_programme表的project_id获取PLM_PROGRAMME_CODE
+persale_demands_id	项目需求编码（商务需求ID）	varchar（100）	　取值pms_prj_project表
+oper_idf	操作标识	varchar（100）	　如果是变更通过后调用此接口，则值为‘变更’
+delete_idf	删除标识	varchar（100）	默认为N
+creation_date	创建日期	datetime	　
+last_update_date	更改日期	datetime	　
+
+四、	项目执行中的变更-BPM
+1、	BPM变更流程调整：变更提交接口调整：变更流程提交接口中增加变更子类、方案名称、产品类型、电芯容量、电芯类型、BMS种类字段，用于接收PMS同步的变更方案的值。 
+2、	BPM方案变更页面调整：判断接口中对应的变更子类、方案名称、产品类型、电芯容量、电芯类型、BMS种类字段是否有值，有则带出并展示到界面中。
+ 
+
+
+
+
+
